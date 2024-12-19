@@ -6,10 +6,6 @@
 class ImplicitFunctionBuilder {
   public:
     ImplicitFunctionBuilder();
-    ImplicitFunctionBuilder(const std::vector<Vertex> &vertices,
-                            const std::vector<Triangle> &triangles,
-                            const std::vector<Edge> &edges,
-                            const std::vector<DataPoint> &data_points);
 
     void setVerbosity(bool verbose) { verbose_ = verbose; }
 
@@ -22,11 +18,18 @@ class ImplicitFunctionBuilder {
     void addDataPoint(double, double, const Normal &);
     void endDescription();
 
+    double evaluate(double x, double y) const;
+
+  private:
+    ImplicitFunctionBuilder(const std::vector<Vertex> &vertices,
+                            const std::vector<Triangle> &triangles,
+                            const std::vector<Edge> &edges,
+                            const std::vector<DataPoint> &data_points);
+
     void setDataPoints(const std::vector<DataPoint> &new_data_points);
     DataPoint createDataPoint(double x, double y, const Normal &normal);
     void buildLinearSystem();
     const Eigen::VectorXd &solve();
-    double evaluate(double x, double y) const;
 
     void visualize(
         const std::string &filename,
@@ -37,7 +40,6 @@ class ImplicitFunctionBuilder {
                            int ny = 100, // number of samples in y
                            bool showMesh = true) const;
 
-  private:
     std::vector<std::vector<std::pair<double, double>>>
     computeContours(double min_val, double max_val, int num_contours) const;
 

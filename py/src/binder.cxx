@@ -7,10 +7,10 @@
 PYBIND11_MODULE(implicit2d, m) {
     pybind11::class_<ImplicitFunctionBuilder>(m, "ImplicitBuilder")
         .def(pybind11::init<>())
-        .def(
-            pybind11::init<const std::vector<Vertex> &,
-                           const std::vector<Triangle>, const std::vector<Edge>,
-                           const std::vector<DataPoint> &>())
+        // .def(
+        //     pybind11::init<const std::vector<Vertex> &,
+        //                    const std::vector<Triangle>, const std::vector<Edge>,
+        //                    const std::vector<DataPoint> &>())
 
         .def("beginDescription", &ImplicitFunctionBuilder::beginDescription)
 

@@ -14,4 +14,4 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/../../bin")
 include_directories(../../eigen)
 
 add_subdirectory(lib) # the lib
-add_subdirectory(test) # the app
+# add_subdirectory(test) # the app

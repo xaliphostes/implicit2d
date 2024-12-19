@@ -99,10 +99,12 @@ void ImplicitFunctionBuilder::buildLinearSystem() {
     b.resize(n + m + 1);
     b.setZero();
 
-    std::cout << "System size: " << (n + m + 1) << " equations, " << n
-              << " unknowns\n";
-    std::cout << "Matrix A size: " << A.rows() << "x" << A.cols() << "\n";
-    std::cout << "Vector b size: " << b.size() << "\n";
+    if (verbose_) {
+        std::cout << "System size: " << (n + m + 1) << " equations, " << n
+                  << " unknowns\n";
+        std::cout << "Matrix A size: " << A.rows() << "x" << A.cols() << "\n";
+        std::cout << "Vector b size: " << b.size() << "\n";
+    }
 
     // Get edge connectivity respecting cuts (no edges across faults)
     auto edge_neighbors = buildEdgeConnectivity();
@@ -136,9 +138,11 @@ void ImplicitFunctionBuilder::buildLinearSystem() {
         const auto &basis_grads =
             triangle_basis_gradients[dp.containing_triangle];
 
-        std::cout << "Data point " << k << " in triangle "
-                  << dp.containing_triangle << " with normal "
-                  << dp.normal.transpose() << "\n";
+        if (verbose_) {
+            std::cout << "Data point " << k << " in triangle "
+                      << dp.containing_triangle << " with normal "
+                      << dp.normal.transpose() << "\n";
+        }
 
         // Contribution from each vertex of the containing triangle
         double weight = 1.0; // Can be adjusted based on data confidence
@@ -161,22 +165,26 @@ void ImplicitFunctionBuilder::buildLinearSystem() {
     A.setFromTriplets(triplets.begin(), triplets.end());
 
     // Print system statistics
-    std::cout << "Number of non-zeros in A: " << triplets.size() << "\n";
+    if (verbose_)
+        std::cout << "Number of non-zeros in A: " << triplets.size() << "\n";
     double density = double(triplets.size()) / (A.rows() * A.cols()) * 100;
-    std::cout << "Matrix density: " << density << "%\n";
+    if (verbose_)
+        std::cout << "Matrix density: " << density << "%\n";
 }
 
 // Solve the linear system to get the implicit function values
 const Eigen::VectorXd &ImplicitFunctionBuilder::solve() {
-    std::cout << "Solving system of size " << A.rows() << "x" << A.cols()
-              << "\n";
+    if (verbose_)
+        std::cout << "Solving system of size " << A.rows() << "x" << A.cols()
+                  << "\n";
 
     // Use SparseLU for the normal equations: (A^T * A)x = A^T * b
     Eigen::SparseMatrix<double> AtA = A.transpose() * A;
     Eigen::VectorXd Atb = A.transpose() * b;
 
-    std::cout << "Normal equations size: " << AtA.rows() << "x" << AtA.cols()
-              << "\n";
+    if (verbose_)
+        std::cout << "Normal equations size: " << AtA.rows() << "x"
+                  << AtA.cols() << "\n";
 
     Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
     solver.compute(AtA);
@@ -191,7 +199,8 @@ const Eigen::VectorXd &ImplicitFunctionBuilder::solve() {
         throw std::runtime_error("Failed to solve system");
     }
 
-    std::cout << "Solution norm: " << solution_.norm() << "\n";
+    if (verbose_)
+        std::cout << "Solution norm: " << solution_.norm() << "\n";
     return solution_;
 }
 

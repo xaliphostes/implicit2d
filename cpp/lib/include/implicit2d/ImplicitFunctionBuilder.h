@@ -11,6 +11,8 @@ class ImplicitFunctionBuilder {
                             const std::vector<Edge> &edges,
                             const std::vector<DataPoint> &data_points);
 
+    void setVerbosity(bool verbose) { verbose_ = verbose; }
+
     void beginDescription();
     void addVertex(double, double);
     void addVertices(const std::vector<double> &);
@@ -21,7 +23,6 @@ class ImplicitFunctionBuilder {
     void endDescription();
 
     void setDataPoints(const std::vector<DataPoint> &new_data_points);
-
     DataPoint createDataPoint(double x, double y, const Normal &normal);
     void buildLinearSystem();
     const Eigen::VectorXd &solve();
@@ -61,4 +62,5 @@ class ImplicitFunctionBuilder {
     Eigen::SparseMatrix<double> A;
     Eigen::VectorXd b;
     Eigen::VectorXd solution_;
+    bool verbose_{false};
 };

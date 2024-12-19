@@ -1,7 +1,65 @@
 import cv2
 import numpy as np
 from scipy.ndimage import gaussian_filter1d
+from scipy.spatial import Delaunay
+import matplotlib.pyplot as plt
 import implicit2d
+
+def sample_model_points(image_path, n_random_points=1000):
+    # Read image
+    img = cv2.imread(image_path)
+    h, w = img.shape[:2]
+    
+    # Get bbox from image bounds
+    bbox = np.array([[0, 0], [w, 0], [w, h], [0, h]]) / [w, h]
+    
+    # Generate random points inside bbox
+    points = np.random.rand(n_random_points, 2)
+    
+    # Add bbox corners and points along boundaries for better triangulation
+    boundary_points = np.array([
+        [0, 0], [0.25, 0], [0.5, 0], [0.75, 0], [1, 0],
+        [1, 0.25], [1, 0.5], [1, 0.75], [1, 1],
+        [0.75, 1], [0.5, 1], [0.25, 1], [0, 1],
+        [0, 0.75], [0, 0.5], [0, 0.25]
+    ])
+    
+    # Combine all points
+    all_points = np.vstack([points, boundary_points])
+    
+    # Create Delaunay triangulation
+    tri = Delaunay(all_points)
+    
+    # Convert to our mesh format
+    vertices = []
+    for i, p in enumerate(all_points):
+        vertices.append([p[0], p[1], i])  # x, y, id
+        
+    triangles = []
+    for i, t in enumerate(tri.simplices):
+        triangles.append([int(t[0]), int(t[1]), int(t[2]), i])  # v1, v2, v3, id
+        
+    return np.array(vertices), np.array(triangles)
+
+def visualize_mesh(vertices, triangles, fault_points=None, red_horizon=None, green_horizon=None):
+    plt.figure(figsize=(10, 10))
+    
+    # Plot triangulation
+    plt.triplot(vertices[:, 0], vertices[:, 1], triangles[:, :3], 'k-', alpha=0.3, linewidth=.5)
+    
+    # Plot features if provided
+    # if fault_points is not None:
+    #     plt.plot(fault_points[:, 0], fault_points[:, 1], 'k-', linewidth=1)
+    # if red_horizon is not None:
+    #     plt.plot(red_horizon[:, 0], red_horizon[:, 1], 'r-', linewidth=2)
+    # if green_horizon is not None:
+    #     plt.plot(green_horizon[:, 0], green_horizon[:, 1], 'g-', linewidth=2)
+    
+    # Plot vertices
+    plt.plot(vertices[:, 0], vertices[:, 1], 'k.', markersize=1)
+    
+    plt.axis('equal')
+    plt.show()
 
 def extract_features(image_path):
     # Read image
@@ -112,8 +170,35 @@ def build_implicit_function(points, normals):
 
 # Main execution
 if __name__ == "__main__":
+    
+    # -----------------------------------------------------------------
+    # TESTING Json parser
+    # -----------------------------------------------------------------
+    model = implicit2d.parseGeologicalModel('../models/model1.json')
+    for object in model:
+        print(object.type, object.coords, '\n')
+    # -----------------------------------------------------------------
+    # END of testing Json parser
+    # -----------------------------------------------------------------
+    
+    
+    
+    image_path = "../models/model1.png"
+    
     # Extract features from image
-    features = extract_features("../models/model1.png")
+    features = extract_features(image_path)
+    
+    # Generate mesh using random points and Delaunay
+    vertices, triangles = sample_model_points(image_path, n_random_points=10000)
+    
+    # Visualize result
+    visualize_mesh(vertices, triangles,
+                  fault_points=features['fault'],
+                  red_horizon=features['red_horizon'][0],
+                  green_horizon=features['green_horizon'][0])
+    
+    # Extract features from image
+    # features = extract_features("../models/model1.png")
     
     # Build red horizon model
     red_points, red_normals = features['red_horizon']

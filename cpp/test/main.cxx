@@ -15,22 +15,22 @@ Mesh createGrid(int nx, int ny, double width = 10.0, double height = 10.0) {
     // Create vertices
     double dx = width / (nx - 1);
     double dy = height / (ny - 1);
-    int vid = 0;
+    uint32_t vid = 0;
 
-    for (int j = 0; j < ny; j++) {
-        for (int i = 0; i < nx; i++) {
+    for (uint32_t j = 0; j < ny; j++) {
+        for (uint32_t i = 0; i < nx; i++) {
             vertices.push_back({i * dx, j * dy, vid++});
         }
     }
 
     // Create triangles
-    int tid = 0;
-    for (int j = 0; j < ny - 1; j++) {
-        for (int i = 0; i < nx - 1; i++) {
-            int v1 = j * nx + i;
-            int v2 = v1 + 1;
-            int v3 = v1 + nx;
-            int v4 = v2 + nx;
+    uint32_t tid = 0;
+    for (uint32_t j = 0; j < ny - 1; j++) {
+        for (uint32_t i = 0; i < nx - 1; i++) {
+            uint32_t v1 = j * nx + i;
+            uint32_t v2 = v1 + 1;
+            uint32_t v3 = v1 + nx;
+            uint32_t v4 = v2 + nx;
 
             // Lower triangle
             triangles.push_back({v1, v2, v3, tid++});
@@ -43,17 +43,18 @@ Mesh createGrid(int nx, int ny, double width = 10.0, double height = 10.0) {
 }
 
 // Create fault edges (vertical fault in this example)
-Edges createFaults(const Vertices &vertices, int nx, int ny, double fault_x) {
+Edges createFaults(const Vertices &vertices, uint32_t nx, uint32_t ny,
+                   double fault_x) {
 
     Edges edges;
-    int eid = 0;
+    uint32_t eid = 0;
 
     // Create all edges
-    for (int j = 0; j < ny - 1; j++) {
-        for (int i = 0; i < nx - 1; i++) {
-            int v1 = j * nx + i;
-            int v2 = v1 + 1;
-            int v3 = v1 + nx;
+    for (uint32_t j = 0; j < ny - 1; j++) {
+        for (uint32_t i = 0; i < nx - 1; i++) {
+            uint32_t v1 = j * nx + i;
+            uint32_t v2 = v1 + 1;
+            uint32_t v3 = v1 + nx;
 
             // Check if edge crosses fault line
             bool is_fault =
@@ -73,14 +74,14 @@ Edges createFaults(const Vertices &vertices, int nx, int ny, double fault_x) {
     }
 
     // Add last row of horizontal edges
-    for (int i = 0; i < nx - 1; i++) {
-        int v1 = (ny - 1) * nx + i;
+    for (uint32_t i = 0; i < nx - 1; i++) {
+        uint32_t v1 = (ny - 1) * nx + i;
         edges.push_back({v1, v1 + 1, false, eid++});
     }
 
     // Add last column of vertical edges
-    for (int j = 0; j < ny - 1; j++) {
-        int v1 = j * nx + (nx - 1);
+    for (uint32_t j = 0; j < ny - 1; j++) {
+        uint32_t v1 = j * nx + (nx - 1);
         edges.push_back({v1, v1 + nx, false, eid++});
     }
 
@@ -124,16 +125,14 @@ int main() {
     auto [vertices, triangles] = createGrid(nx, ny);
 
     // Create fault at x = 5.0
-    auto edges = createFaults(vertices, nx, ny, 5.0);
+    Edges edges = createFaults(vertices, nx, ny, 5.0);
 
     // Initialize builder
     Builder builder(vertices, triangles, edges, {});
 
     // Create synthetic data
     auto data_points = createSyntheticData(builder, vertices, 5.0);
-
-    // Update builder with data points
-    // builder = Builder(vertices, triangles, edges, data_points);
+    builder.setDataPoints(data_points);
 
     // Build and solve system
     builder.buildLinearSystem();
@@ -146,16 +145,22 @@ int main() {
     std::cout << "Number of edges: " << edges.size() << "\n";
     std::cout << "Number of data points: " << data_points.size() << "\n";
 
+    builder.visualize("result.svg", VisualizationOptions{.showContours = true});
+    builder.visualizeColorMap("result_colormap_hires.svg", 200, 200, false);
+
     // Sample some points across the domain
-    std::cout << "\nSampling implicit function values:\n";
-    uint N = 100;
-    for (double x = 0; x <= N; x += 2.5) {
-        for (double y = 0; y <= N; y += 2.5) {
-            try {
-                double val = builder.evaluate(x/10, y/10);
-                std::cout << "f(" << x << "," << y << ") = " << val << "\n";
-            } catch (const std::runtime_error &e) {
-                std::cout << "Point (" << x << "," << y << ") outside mesh\n";
+    if (0) {
+        std::cout << "\nSampling implicit function values:\n";
+        uint N = 100;
+        for (double x = 0; x <= N; x += 2.5) {
+            for (double y = 0; y <= N; y += 2.5) {
+                try {
+                    double val = builder.evaluate(x / 10, y / 10);
+                    std::cout << "f(" << x << "," << y << ") = " << val << "\n";
+                } catch (const std::runtime_error &e) {
+                    std::cout << "Point (" << x << "," << y
+                              << ") outside mesh\n";
+                }
             }
         }
     }

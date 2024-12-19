@@ -1,4 +1,4 @@
 bin/*
-!bin/test.py
-!bin/gui.py
 .DS_Store
+!bin/*.py
+!bin/*.png

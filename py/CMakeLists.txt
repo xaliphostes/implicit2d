@@ -4,8 +4,9 @@ project(implicit2d)
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
 
 include_directories(../cpp/lib/include/)
+include_directories(../../eigen)
 
-find_library(IMPL impl PATHS ../bin/ REQUIRED)
+find_library(IMPL implicit2d PATHS ../bin/ REQUIRED)
 
 add_subdirectory(pybind11)
 pybind11_add_module(implicit2d src/binder.cxx)

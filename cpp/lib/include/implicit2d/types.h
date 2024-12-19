@@ -3,32 +3,42 @@
 #include <unordered_map>
 #include <vector>
 
+using Normal = Eigen::Vector2d;
+using Barycentric = Eigen::Vector3d;
+
 // Data point can be anywhere in the mesh
 struct DataPoint {
-    double x, y;             // position
-    Eigen::Vector2d normal;  // normal to geological layer
-    int containing_triangle; // ID of triangle containing this point
-    Eigen::Vector3d
-        barycentric; // barycentric coordinates in containing triangle
+    double x, y;
+    Normal normal;
+    uint32_t containing_triangle; // ID of triangle containing this point
+    Barycentric barycentric;
 };
 
 struct Vertex {
     double x, y;
-    int id;
+    uint32_t id;
 };
 
 struct Triangle {
-    int v1, v2, v3; // vertex indices
-    int id;
+    uint32_t v1, v2, v3;
+    uint32_t id;
 };
 
 struct Edge {
-    int v1, v2;  // vertex indices
+    uint32_t v1, v2;
     bool is_cut; // true if edge represents a fault
-    int id;
+    uint32_t id;
 };
 
 using Vertices = std::vector<Vertex>;
 using Edges = std::vector<Edge>;
 using Triangles = std::vector<Triangle>;
 using DataPoints = std::vector<DataPoint>;
+
+struct VisualizationOptions {
+    uint nbIsos{50};
+    bool showBBox{true};
+    bool showContours{true};
+    bool showMesh{true};
+    bool showDataPoints{true};
+};
